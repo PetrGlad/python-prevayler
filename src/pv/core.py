@@ -4,9 +4,7 @@
     Author Petr Gladkikh
 """
 import cPickle as pickle
-import traceback
-import sys
-import os
+# import traceback, sys, os
 import threading
 import os.path
 import re
@@ -34,7 +32,12 @@ class Log(object):
     
     def makeSnapshotName(self, serialId):
         return os.path.join(self.dataDir, ("%010u." + self.SNAPSHOT_SUFFIX) % serialId)
-    
+
+    def logRotate(self, serialId):
+        self.close()
+        self.logFileName = self.makeLogFileName(serialId + 1)
+        self.logFile = open(self.logFileName, 'ab')
+
     def findPieces(self):
         allFiles = os.listdir(self.dataDir)
         allFiles.sort()
@@ -54,8 +57,7 @@ class Log(object):
                     if snapshot is None:
                         serialId = thisId
                     logList.append(os.path.join(self.dataDir, fName))
-        self.logFileName = self.makeLogFileName(serialId + 1) 
-        self.logFile = open(self.logFileName, 'ab')
+        self.logRotate(serialId)
         return (serialId, snapshot, logList)
     
     def loadInitState(self, initStateConstructor):        
@@ -67,14 +69,14 @@ class Log(object):
         def replayLog():
             for logFileName in logList:
                 log = open(logFileName, 'rb')
-                try:                    
+                try:
                     try:
                         while True:
                             yield pickle.load(log)
                     except EOFError:
                         pass
                 finally:
-                   log.close()
+                    log.close()
         return (initialState, replayLog)
     
     def put(self, value):
@@ -85,10 +87,13 @@ class Log(object):
         # TODO refine error handling 
         snapshotFile = open(self.makeSnapshotName(self.serialId), 'ab')        
         pickle.dump(root, snapshotFile, pickle.HIGHEST_PROTOCOL)
-        snapshotFile.close()
+        snapshotFile.close()        
+        self.logRotate(self.serialId)
         
-    def close(self):
-        self.logFile.close()
+    def close(self):        
+        if self.logFile is not None:                        
+            self.logFile.close()
+            self.logFile = None
 
 
 class PSys(object):
@@ -107,8 +112,8 @@ class PSys(object):
             self.lock.acquire()
             (self.root, replayLog) = self.log.loadInitState(rootConstructor)
             try:
-                iter = replayLog()
-                for tn in iter:
+                itr = replayLog()
+                for tn in itr:
                     tn(self.root)
                     self.tnCount += 1
             except StopIteration: pass                
@@ -133,52 +138,3 @@ class PSys(object):
             self.tnCount += 1
         finally:
             self.lock.release()
-
-
-# ---------------------------------------------------------
-# Test code
-
-
-class Tn1:
-    def __call__(self, root):
-        if 'tick' in root:
-            root['tick'] += 1
-        else:
-            root['tick'] = 0
-
-
-class Tn2:
-    def __init__(self, name, id):
-        self.name = name
-        self.id = id
-        
-    def __call__(self, root):
-        if self.id in root:
-            root[self.id] = root[self.id].swapcase() 
-        else:
-            root[self.id] = self.name
-
-
-if __name__ == "__main__":
-    print "----hi----"
-    import time
-    t1 = time.time()    
-    psys = PSys(Log('../dat'), dict)
-    print "Load time" , time.time() - t1
-    print 'Transactions count', psys.tnCount
-    print "----loaded----"    
-    print "\nPerforming transactions ..."
-    t1 = time.time()
-    psys.exe(Tn1())
-    k = 0
-    for n in xrange(1000):
-        for name in ['Jane', 'Joos', 'Joomla', 'Kritter']:                                
-            psys.exe(Tn2(name, k))
-            k += 1
-    print "Transactions time" , time.time() - t1
-    print 'Transactions count', psys.tnCount
-    psys.makeSnapshot()
-    psys.log.close()
-    print "-----final state----"
-    print '\n'.join([`key`+'->'+`v` for key, v in psys.root.iteritems()])    
-    print "----bye----\n"
