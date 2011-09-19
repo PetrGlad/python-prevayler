@@ -8,7 +8,7 @@ import cPickle as pickle
 import threading
 import os.path
 import re
-from pv.util import baseN
+from pv.util import baseN, NUMERALS
 
 
 class Log(object):
@@ -21,7 +21,7 @@ class Log(object):
     LOG_SUFFIX = "log"
     SNAPSHOT_SUFFIX = "snapshot"
     
-    reSplitFileName = re.compile('(\d+)\.(\w+)')
+    reSplitFileName = re.compile('([' + NUMERALS + ']+)\.(\w+)')
     idNumBase = 36
     
     def __init__(self, dataDir):
