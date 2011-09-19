@@ -8,6 +8,7 @@ import cPickle as pickle
 import threading
 import os.path
 import re
+from pv.util import baseN
 
 
 class Log(object):
@@ -21,17 +22,23 @@ class Log(object):
     SNAPSHOT_SUFFIX = "snapshot"
     
     reSplitFileName = re.compile('(\d+)\.(\w+)')
+    idNumBase = 36
     
     def __init__(self, dataDir):
         self.serialId = 0
         self.dataDir = dataDir
-        self.logFile = None        
+        self.logFile = None
+        
+    def formatFileName(self, serialId, suffix):
+        return baseN(serialId, self.idNumBase).rjust(10, '0') + '.' + suffix
     
     def makeLogFileName(self, serialId):
-        return os.path.join(self.dataDir, ("%010u." + self.LOG_SUFFIX) % serialId)
+        return os.path.join(self.dataDir,
+                            self.formatFileName(serialId, self.LOG_SUFFIX))
     
     def makeSnapshotName(self, serialId):
-        return os.path.join(self.dataDir, ("%010u." + self.SNAPSHOT_SUFFIX) % serialId)
+        return os.path.join(self.dataDir,
+                            self.formatFileName(serialId, self.SNAPSHOT_SUFFIX))
 
     def logRotate(self, serialId):
         self.close()
@@ -47,7 +54,7 @@ class Log(object):
         for fName in allFiles:
             m = self.reSplitFileName.match(fName)
             if m:
-                thisId = int(m.group(1))
+                thisId = long(m.group(1), self.idNumBase)
                 suffix = m.group(2)
                 if suffix == self.SNAPSHOT_SUFFIX:
                     logList = [] # no purge implemented yet
