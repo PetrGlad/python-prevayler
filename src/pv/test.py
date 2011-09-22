@@ -61,28 +61,45 @@ class Test(unittest.TestCase):
         
         psys = PSys(Log(Test.tempDir), dict)        
         self.assertEquals(psys.root['tick'], 2)
-         
-    def testEndOfUniverse(self):
-        "See issue #3 on github."
-        class TestLog(Log):
-            def findPieces(self):
-                (serialId, snapshot, logList) = Log.findPieces(self)
-                return (serialId + pow(2, 96) - 1, snapshot, logList)
-        log = TestLog(Test.tempDir)
-        psys = PSys(log, dict)
-        count = 10000
-        for _ in range(count):        
-            psys.exe(Tn1())
-        self.assertEquals(psys.root['tick'], count - 1)        
-        psys.log.close()        
+        
+    def testMultipleSnapshots(self):
+        "See issue #1 on github."        
+        psys = PSys(Log(Test.tempDir), dict)
+        for _ in range(7):
+            psys.exe(Tn1())         # tick = 0
+            psys.exe(Tn1())         # 1
+            psys.makeSnapshot()
+        psys.exe(Tn1())         # 2
+        self.assertEquals(psys.root['tick'], 14)        
+        psys.log.close()
+        
         psys = PSys(Log(Test.tempDir), dict)        
-        self.assertEquals(psys.root['tick'], count - 1)
+        self.assertEquals(psys.root['tick'], 14)
+        
         
     def testFilenamePattern(self):
         namePattern = Log.reSplitFileName        
-        self.assertTrue(namePattern.match(NUMERALS + ".karma"))
+        self.assertTrue(namePattern.match(NUMERALS[:Log.idNumBase] + ".karma"))
         self.assertFalse(namePattern.match(NUMERALS))
-                        
+        
+    def testGetPieces(self):
+        self.assertEqual(Log("z").getPieces([]), 
+                         (0, None, []))
+        self.assertEqual(Log("z").getPieces([".log", ".snapshot", "I am Corvex"]), 
+                         (0, None, []))        
+        # If no snapshot then assuming that we starting from transaction #1 and use all logs.
+        self.assertEqual(Log("z").getPieces(["0020.log", "01.log", "12.bordeaux", "2.log", "30.log"]),
+                         (0, None, ["z/01.log", "z/2.log", "z/0020.log", "z/30.log"]))
+        # snapshot and no logs        
+        self.assertEqual(Log("z").getPieces(["0020.snapshot"]),
+                         (20L, "z/0020.snapshot", []))
+        # multiple snapshots
+        self.assertEqual(Log("z").getPieces(["003.snapshot", "0020.snapshot", "01.log", "0014.snapshot", "2.log", "0021.log", "30.log"]),
+                         (20L, "z/0020.snapshot", ["z/0021.log", "z/30.log"]))
+        # expected log-snapshot relation
+        self.assertEqual(Log("z").getPieces(["20.snapshot", "19.log", "20.log", "21.log"]),
+                         (20L, "z/20.snapshot", ["z/21.log"]))
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testSnapshot']

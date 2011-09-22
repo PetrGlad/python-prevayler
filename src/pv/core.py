@@ -21,7 +21,7 @@ class Log(object):
     LOG_SUFFIX = "log"
     SNAPSHOT_SUFFIX = "snapshot"
     
-    idNumBase = 36
+    idNumBase = 10
     reSplitFileName = re.compile('([' + NUMERALS[:idNumBase] + ']+)\.(\w+)')
     
     def __init__(self, dataDir):
@@ -45,30 +45,24 @@ class Log(object):
         self.close()
         self.logFileName = self.makeLogFileName(serialId + 1)
         self.logFile = open(self.logFileName, 'ab')
+        
+    def getIndexedList(self, dirName, allFiles, suffix):
+        matched = [self.reSplitFileName.match(f) for f in allFiles if f.endswith(suffix)] 
+        return sorted([(long(m.group(1),  self.idNumBase), os.path.join(dirName, m.group())) 
+                       for m in matched if m is not None],
+                      key=lambda x: x[0])
 
-    def findPieces(self):
-        allFiles = os.listdir(self.dataDir)
-        allFiles.sort()
-        snapshot = None
-        logList = []
-        serialId = 0
-        for fName in allFiles:
-            m = self.reSplitFileName.match(fName)
-            if m:
-                thisId = long(m.group(1), self.idNumBase)
-                suffix = m.group(2)
-                if suffix == self.SNAPSHOT_SUFFIX:
-                    logList = [] # no purge implemented yet
-                    snapshot = os.path.join(self.dataDir, fName)
-                    serialId = thisId
-                elif suffix == self.LOG_SUFFIX:
-                    if snapshot is None:
-                        serialId = thisId
-                    logList.append(os.path.join(self.dataDir, fName))
+    def getPieces(self, allFiles):
+        try:
+            serialId, snapshot = self.getIndexedList(self.dataDir, allFiles, self.SNAPSHOT_SUFFIX)[-1]            
+        except IndexError:
+            serialId, snapshot = 0, None
+        logList = [x for serial, x in self.getIndexedList(self.dataDir, allFiles, self.LOG_SUFFIX) 
+                   if snapshot is None or serial > serialId]            
         return (serialId, snapshot, logList)
     
     def loadInitState(self, initStateConstructor):
-        (self.serialId, snapshot, logList) = self.findPieces()
+        (self.serialId, snapshot, logList) = self.getPieces(os.listdir(self.dataDir))
         self.logRotate(self.serialId)
         if snapshot:
             initialState = pickle.load(open(snapshot, 'rb'))
@@ -113,7 +107,7 @@ class PSys(object):
         self.log = log
         self.lock = threading.Lock()
         self.tnCount = 0 # for debugging
-        self.load(log, rootConstructor)        
+        self.load(log, rootConstructor)
         
     def load(self, log, rootConstructor):
         try:
