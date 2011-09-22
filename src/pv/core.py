@@ -21,8 +21,8 @@ class Log(object):
     LOG_SUFFIX = "log"
     SNAPSHOT_SUFFIX = "snapshot"
     
-    reSplitFileName = re.compile('([' + NUMERALS + ']+)\.(\w+)')
     idNumBase = 36
+    reSplitFileName = re.compile('([' + NUMERALS[:idNumBase] + ']+)\.(\w+)')
     
     def __init__(self, dataDir):
         self.serialId = 0

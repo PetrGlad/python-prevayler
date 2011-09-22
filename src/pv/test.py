@@ -6,6 +6,7 @@ Tests.
 import unittest
 import glob, os
 from pv.core import PSys, Log
+from util import NUMERALS
 
 class Tn1:
     def __call__(self, root):
@@ -76,6 +77,11 @@ class Test(unittest.TestCase):
         psys.log.close()        
         psys = PSys(Log(Test.tempDir), dict)        
         self.assertEquals(psys.root['tick'], count - 1)
+        
+    def testFilenamePattern(self):
+        namePattern = Log.reSplitFileName        
+        self.assertTrue(namePattern.match(NUMERALS + ".karma"))
+        self.assertFalse(namePattern.match(NUMERALS))
                         
 
 if __name__ == "__main__":
