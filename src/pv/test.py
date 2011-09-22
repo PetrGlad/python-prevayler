@@ -1,5 +1,7 @@
 '''
-@author: petr
+Tests.
+
+@author Petr Gladkikh
 '''
 import unittest
 import glob, os
@@ -57,7 +59,23 @@ class Test(unittest.TestCase):
         psys.log.close()
         
         psys = PSys(Log(Test.tempDir), dict)        
-        self.assertEquals(psys.root['tick'], 2) 
+        self.assertEquals(psys.root['tick'], 2)
+         
+    def testEndOfUniverse(self):
+        "See issue #3 on github."
+        class TestLog(Log):
+            def findPieces(self):
+                (serialId, snapshot, logList) = Log.findPieces(self)
+                return (serialId + pow(2, 96) - 1, snapshot, logList)
+        log = TestLog(Test.tempDir)
+        psys = PSys(log, dict)
+        count = 10000
+        for _ in range(count):        
+            psys.exe(Tn1())
+        self.assertEquals(psys.root['tick'], count - 1)        
+        psys.log.close()        
+        psys = PSys(Log(Test.tempDir), dict)        
+        self.assertEquals(psys.root['tick'], count - 1)
                         
 
 if __name__ == "__main__":

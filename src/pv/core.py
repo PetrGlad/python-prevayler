@@ -1,7 +1,7 @@
 """
     Implementation of "object prevalence" in Python.
     
-    Author Petr Gladkikh
+    @author Petr Gladkikh
 """
 import cPickle as pickle
 # import traceback, sys, os
@@ -30,6 +30,7 @@ class Log(object):
         self.logFile = None
         
     def formatFileName(self, serialId, suffix):
+        # File name is padded for easier sorting
         return baseN(serialId, self.idNumBase).rjust(10, '0') + '.' + suffix
     
     def makeLogFileName(self, serialId):
@@ -64,11 +65,11 @@ class Log(object):
                     if snapshot is None:
                         serialId = thisId
                     logList.append(os.path.join(self.dataDir, fName))
-        self.logRotate(serialId)
         return (serialId, snapshot, logList)
     
-    def loadInitState(self, initStateConstructor):        
-        (self.serialId, snapshot, logList) = self.findPieces()        
+    def loadInitState(self, initStateConstructor):
+        (self.serialId, snapshot, logList) = self.findPieces()
+        self.logRotate(self.serialId)
         if snapshot:
             initialState = pickle.load(open(snapshot, 'rb'))
         else:
