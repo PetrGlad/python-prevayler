@@ -85,7 +85,7 @@ class Test(unittest.TestCase):
     def testGetPieces(self):
         self.assertEqual(Log("z").getPieces([]), 
                          (0, None, []))
-        self.assertEqual(Log("z").getPieces([".log", ".snapshot", "I am Corvex"]), 
+        self.assertEqual(Log("z").getPieces([".log", ".snapshot", "I am Corvax"]), 
                          (0, None, []))        
         # If no snapshot then assuming that we starting from transaction #1 and use all logs.
         self.assertEqual(Log("z").getPieces(["0020.log", "01.log", "12.bordeaux", "2.log", "30.log"]),

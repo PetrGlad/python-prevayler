@@ -7,6 +7,7 @@ NUMERALS = "0123456789abcdefghijklmnopqrstuvwxyz"
 def baseN(num, b, numerals=NUMERALS):
     """Integer to string with given base.
     http://code.activestate.com/recipes/65212/"""
+    assert 2 <= b and b <= 36
     return ((num == 0) and numerals[0]) or (baseN(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
 
 
