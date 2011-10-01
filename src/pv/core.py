@@ -19,7 +19,8 @@ class Log(object):
     """
     
     LOG_SUFFIX = "log"
-    SNAPSHOT_SUFFIX = "snapshot"
+    SNAPSHOT_SUFFIX = "snapshot"    
+    PICKLE_PROTOCOL = 0    # ASCII
     
     idNumBase = 10
     reSplitFileName = re.compile('([' + NUMERALS[:idNumBase] + ']+)\.(\w+)')
@@ -83,13 +84,13 @@ class Log(object):
     
     def put(self, value):
         self.serialId += 1
-        pickle.dump(value, self.logFile, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(value, self.logFile, Log.PICKLE_PROTOCOL)
         self.logFile.flush()
         
     def putSnapshot(self, root):
         # TODO refine error handling 
         snapshotFile = open(self.makeSnapshotName(self.serialId), 'ab')        
-        pickle.dump(root, snapshotFile, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(root, snapshotFile, Log.PICKLE_PROTOCOL)
         snapshotFile.close()        
         self.logRotate(self.serialId)
         
