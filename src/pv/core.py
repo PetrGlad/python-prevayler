@@ -84,6 +84,7 @@ class Log(object):
     def put(self, value):
         self.serialId += 1
         pickle.dump(value, self.logFile, pickle.HIGHEST_PROTOCOL)
+        self.logFile.flush()
         
     def putSnapshot(self, root):
         # TODO refine error handling 
