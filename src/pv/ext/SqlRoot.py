@@ -15,8 +15,16 @@ class SqlRoot(dict):
         self.connect()
 
     def __getstate__(self):
+        # Don't persist the connection.
+        attrs = {}
+        for k, v in self.__dict__.items():
+                if k == 'dbconn':
+                        continue
+                attrs[k] = v
+
+        # XXX: use iterator + gzip to minimize memory?
         value = {
-            'attributes': self.__dict__,
+            'attributes': attrs,
             'dbState' : ";".join(list(self.dbconn.iterdump()))
             }
         return value
