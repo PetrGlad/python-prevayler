@@ -1,36 +1,23 @@
 '''
-Root object for Prevayler system that includes connection to SQLite.
+Object for Prevayler system that includes connection to SQLite in-memory db.
 Mon Sep 26 17:46:59 EDT 2011
 '''
 import sqlite3 
 
-class SqlRoot(dict):
+class SqlRoot:
     """ This class allows storing data that benefits from using SQL in SQLite DB.
     So you can manipulate data on db connection self.dbconn via normal dbapi 
     in prevalyer transactions and state of db will be persisted.  
     Instance of this class can be used as root of prevalent system.    
     """
-    def __init__(self, *args, **kwds):
-        dict.__init__(self, *args, **kwds)
+    def __init__(self):        
         self.connect()
 
     def __getstate__(self):
-        # Don't persist the connection.
-        attrs = {}
-        for k, v in self.__dict__.items():
-                if k == 'dbconn':
-                        continue
-                attrs[k] = v
-
         # XXX: use iterator + gzip to minimize memory?
-        value = {
-            'attributes': attrs,
-            'dbState' : ";".join(list(self.dbconn.iterdump()))
-            }
-        return value
+        return ";".join(list(self.dbconn.iterdump()))
 
-    def __setstate__(self, value):
-        self.__dict__ = value['attributes']     
+    def __setstate__(self, value):            
         self.connect()
         self.dbconn.executescript(value['dbState'])
 
