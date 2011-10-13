@@ -6,6 +6,6 @@ files = (
     )
 
 for m in modules:
-	doctest.testmod(m)
+        doctest.testmod(m)
 for f in files:
-	doctest.testfile(f)
+        doctest.testfile(f)

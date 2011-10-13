@@ -2,20 +2,20 @@ Light exercise for the Hybrid root object.
 
 Imports.
 
-	>>> import os
-	>>> import shutil
-	>>> import sys
-	>>> sys.path.append('../src')
-	>>> from pv.ext.Hybrid import Hybrid
-	>>> from pv.core import PSys, Log
+        >>> import os
+        >>> import shutil
+        >>> import sys
+        >>> sys.path.append('../src')
+        >>> from pv.ext.Hybrid import Hybrid
+        >>> from pv.core import PSys, Log
 
 Init prevayler with an empty data directory.
 
-	>>> datadir = './tmp'
-	>>> if os.path.exists(datadir):
-	...     shutil.rmtree(datadir)
-	>>> os.mkdir(datadir)
-	>>> psys = PSys(Log(datadir), lambda : Hybrid())
+        >>> datadir = './tmp'
+        >>> if os.path.exists(datadir):
+        ...     shutil.rmtree(datadir)
+        >>> os.mkdir(datadir)
+        >>> psys = PSys(Log(datadir), lambda : Hybrid())
 
 The environment in which doctests run isn't a module, and pickle
 requires that the class definition be a top level object in a module.
@@ -38,13 +38,13 @@ So, define our test transaction class in a file.
 
 Log a transaction.
 
-	>>> psys.exe(test_module.T("create table test (name)"))
-	>>> psys.exe(test_module.T("insert into test values ('abc')"))
+        >>> psys.exe(test_module.T("create table test (name)"))
+        >>> psys.exe(test_module.T("insert into test values ('abc')"))
 
 Make a snapshot.
 
-	>>> psys.makeSnapshot()
+        >>> psys.makeSnapshot()
 
 Reload prevayler.
 
-	>>> psys.load(Log(datadir), lambda : Hybrid())
+        >>> psys.load(Log(datadir), lambda : Hybrid())
