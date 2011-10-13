@@ -36,7 +36,7 @@ So, define our test transaction class in a file.
         >>> fp.close()
         >>> import test_module
 
-Log a transaction.
+Log a few transactions.
 
         >>> psys.exe(test_module.T("create table test (name)"))
         >>> psys.exe(test_module.T("insert into test values ('abc')"))
@@ -48,3 +48,11 @@ Make a snapshot.
 Reload prevayler.
 
         >>> psys.load(Log(datadir), lambda : Hybrid())
+
+Check state.
+
+	>>> psys.root["n"]
+	2
+	>>> psys.root.dbconn.execute("select * from test").fetchall()
+	[(u'abc',)]
+
