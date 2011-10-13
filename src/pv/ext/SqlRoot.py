@@ -18,7 +18,7 @@ class SqlRoot:
 
     def __setstate__(self, value):            
         self.connect()
-        self.dbconn.executescript(value['dbState'])
+	self.dbconn.executescript(value)
 
     def connect(self):
         self.dbconn = sqlite3.connect(
