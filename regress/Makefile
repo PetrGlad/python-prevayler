@@ -3,3 +3,4 @@ test:
 
 clean:
 	rm -rf *.pyc
+	rm test_module.py
