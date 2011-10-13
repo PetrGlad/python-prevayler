@@ -10,12 +10,17 @@ import os.path
 import re
 from pv.util import baseN, NUMERALS
 
+class Centry:
+    """Log record boundary that is used to detect partial writes.
+    It is not part of API"""
+    # TODO Put sentry values between transaction records to detect partial writes.
+    def __init__(self, serialId):
+        self.serialId = serialId;
+
 
 class Log(object):
     """
     Support for snapshots and log segmentation.
-    
-    TODO Put sentry values between transaction records to detect partial writes.        
     """
     
     LOG_SUFFIX = "log"
@@ -49,7 +54,7 @@ class Log(object):
         
     def getIndexedList(self, dirName, allFiles, suffix):
         matched = [self.reSplitFileName.match(f) for f in allFiles if f.endswith(suffix)] 
-        return sorted([(long(m.group(1),  self.idNumBase), os.path.join(dirName, m.group())) 
+        return sorted([(long(m.group(1), self.idNumBase), os.path.join(dirName, m.group())) 
                        for m in matched if m is not None],
                       key=lambda x: x[0])
 
@@ -75,23 +80,31 @@ class Log(object):
                 try:
                     try:
                         while True:
-                            yield pickle.load(log)
+                            self.serialId += 1
+                            tx = pickle.load(log)
+                            centry = pickle.load(log);
+                            assert self.serialId == centry.serialId                                                        
+                            yield tx
                     except EOFError:
                         pass
                 finally:
                     log.close()
         return (initialState, replayLog)
     
+    def dumpVal(self, value):
+        pickle.dump(value, self.logFile, Log.PICKLE_PROTOCOL)
+    
     def put(self, value):
         self.serialId += 1
-        pickle.dump(value, self.logFile, Log.PICKLE_PROTOCOL)
+        self.dumpVal(value)
+        self.dumpVal(Centry(self.serialId))
         self.logFile.flush()
         
     def putSnapshot(self, root):
         # TODO refine error handling 
         snapshotFile = open(self.makeSnapshotName(self.serialId), 'ab')        
         pickle.dump(root, snapshotFile, Log.PICKLE_PROTOCOL)
-        snapshotFile.close()        
+        snapshotFile.close()
         self.logRotate(self.serialId)
         
     def close(self):        
@@ -102,7 +115,7 @@ class Log(object):
 
 class PSys(object):
     """
-    Persistent ("prevalent") system. 
+    Persistent ("prevalent") system.
     """
     
     def __init__(self, log, rootConstructor):
@@ -116,8 +129,7 @@ class PSys(object):
             self.lock.acquire()
             (self.root, replayLog) = self.log.loadInitState(rootConstructor)
             try:
-                itr = replayLog()
-                for tn in itr:
+                for tn in replayLog():
                     tn(self.root)
                     self.tnCount += 1
             except StopIteration: pass                
