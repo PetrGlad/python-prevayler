@@ -1,5 +1,5 @@
 '''
-Object for Prevayler system that includes connection to SQLite in-memory db.
+Object for Prevayler system that includes connection to SQLite.
 Mon Sep 26 17:46:59 EDT 2011
 '''
 import sqlite3 
