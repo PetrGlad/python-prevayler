@@ -26,16 +26,3 @@ class SqlRoot:
             detect_types = sqlite3.PARSE_DECLTYPES,
             isolation_level = "IMMEDIATE"
             )
-
-    def dumpsql(self, fp):
-        '''
-        Sample usage:
-            log = Log(datadir)
-            root, replay = log.loadInitState(lambda : Hybrid())
-            fp = open(outfn, 'w')
-            root.sql.dumpsql(fp)
-            fp.close()
-        '''
-        for line in self.dbconn.iterdump():
-            s = '%s\n' % line
-            fp.write(s.encode('utf8'))
