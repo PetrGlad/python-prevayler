@@ -14,15 +14,13 @@ class SqlRoot:
         self.connect()
 
     def __getstate__(self):
-        # XXX: use iterator + gzip to minimize memory?
         return ";".join(list(self.dbconn.iterdump()))
 
     def __setstate__(self, value):            
         self.connect()
-        self.dbconn.executescript(value['dbState'])
+        self.dbconn.executescript(value)
 
     def connect(self):
-        # XXX: read up more on sqlite transactions ...
         self.dbconn = sqlite3.connect(
             ':memory:',
             detect_types = sqlite3.PARSE_DECLTYPES,
