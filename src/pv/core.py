@@ -10,7 +10,7 @@ import os.path
 import re
 from pv.util import baseN, NUMERALS
 
-class Centry:
+class Sentry:
     """Log record boundary that is used to detect partial writes.
     It is not part of API"""
     # TODO Put sentry values between transaction records to detect partial writes.
@@ -104,7 +104,7 @@ class Log(object):
     def put(self, value):
         self.serialId += 1
         self.dumpVal(value)
-        self.dumpVal(Centry(self.serialId))
+        self.dumpVal(Sentry(self.serialId))
         self.logFile.flush()
         
     def putSnapshot(self, root):

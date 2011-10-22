@@ -7,22 +7,19 @@ import sqlite3
 class SqlRoot:
     """ This class allows storing data that benefits from using SQL in SQLite DB.
     So you can manipulate data on db connection self.dbconn via normal dbapi 
-    in prevalyer transactions and state of db will be persisted.  
-    Instance of this class can be used as root of prevalent system.    
+    in prevalyer transactions and state of db will be persisted.
     """
     def __init__(self):        
         self.connect()
 
     def __getstate__(self):
-        # XXX: use iterator + gzip to minimize memory?
         return ";".join(list(self.dbconn.iterdump()))
 
     def __setstate__(self, value):            
         self.connect()
-        self.dbconn.executescript(value['dbState'])
+        self.dbconn.executescript(value)
 
     def connect(self):
-        # XXX: read up more on sqlite transactions ...
         self.dbconn = sqlite3.connect(
             ':memory:',
             detect_types = sqlite3.PARSE_DECLTYPES,
