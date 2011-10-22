@@ -3,7 +3,7 @@ Example code
 
 @author: petr
 '''
-from pv.core import PSys, Log
+import pv.core
 from pv.test import Tn1, Tn2
 import os 
 
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     import time
     t1 = time.time()    
     
-    psys = PSys(Log(dataDir), dict)
+    psys = pv.core.init(dataDir, dict)
     print "Load time" , time.time() - t1
     print 'Transactions count', psys.tnCount
     print "----loaded----"    

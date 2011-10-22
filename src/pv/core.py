@@ -9,6 +9,7 @@ import threading
 import os.path
 import re
 from pv.util import baseN, NUMERALS
+import fcntl, os # for FsLock
 
 class Sentry:
     """Log record boundary that is used to detect partial writes.
@@ -16,6 +17,26 @@ class Sentry:
     # TODO Put sentry values between transaction records to detect partial writes.
     def __init__(self, serialId):
         self.serialId = serialId;
+        
+
+# TODO Move this class to own file?        
+class FsLock:
+    def __init__(self, dirName):
+        if os.name != 'posix':
+            raise Exception("Locks are not supported on this os, expected 'posix'." + 
+                            " Implement lock support for '" + os.name + "' or configure prevayler without locks.")
+        self.dirName = dirName
+        self.lockFile = None
+        
+    def acquire(self):
+        assert self.lockFile is None
+        lockFile = open(os.path.join(self.dirName, Log.LOCK_FILE), 'a+')
+        fcntl.flock(lockFile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        self.lockFile = lockFile
+        
+    def release(self):
+        self.lockFile.close()
+        self.lockFile = None
 
 
 class Log(object):
@@ -26,14 +47,17 @@ class Log(object):
     LOG_SUFFIX = "log"
     SNAPSHOT_SUFFIX = "snapshot"    
     PICKLE_PROTOCOL = 0    # ASCII
+    LOCK_FILE = ".log_lock"
     
     idNumBase = 10
     reSplitFileName = re.compile('([' + NUMERALS[:idNumBase] + ']+)\.(\w+)')
     
-    def __init__(self, dataDir):
+    def __init__(self, dataDir, mutex):
         self.serialId = 0
         self.dataDir = dataDir
         self.logFile = None
+        self.mutex = mutex
+        mutex.acquire()
         
     def formatFileName(self, serialId, suffix):
         # File name is padded for easier sorting
@@ -48,7 +72,7 @@ class Log(object):
                             self.formatFileName(serialId, self.SNAPSHOT_SUFFIX))
 
     def logRotate(self, serialId):
-        self.close()
+        self.closeLog()
         self.logFileName = self.makeLogFileName(serialId + 1)
         self.logFile = open(self.logFileName, 'ab')
         
@@ -114,10 +138,14 @@ class Log(object):
         snapshotFile.close()
         self.logRotate(self.serialId)
         
-    def close(self):        
-        if self.logFile is not None:                        
+    def closeLog(self):
+        if self.logFile is not None:
             self.logFile.close()
             self.logFile = None
+        
+    def close(self):        
+        self.closeLog()        
+        self.mutex.release()
 
 
 class PSys(object):
@@ -161,3 +189,7 @@ class PSys(object):
             self.tnCount += 1
         finally:
             self.lock.release()
+
+
+def init(dataDir, rootCtor):
+    return PSys(Log(dataDir, FsLock(dataDir)), rootCtor)

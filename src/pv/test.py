@@ -4,8 +4,8 @@ Tests.
 @author Petr Gladkikh
 '''
 import unittest
-import glob, os
-from pv.core import PSys, Log
+import glob, os, fcntl, errno
+from pv.core import PSys, Log, FsLock
 from util import NUMERALS
 
 class Tn1:
@@ -35,6 +35,11 @@ def clearState(dirName):
         os.remove(fn)
 
 
+class VoidLock:
+    def acquire(self): pass
+    def release(self): pass
+    
+
 class Test(unittest.TestCase):
     
     tempDir = "../../testData"
@@ -48,10 +53,22 @@ class Test(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         clearState(Test.tempDir)
+        
+    def testFsLock(self):
+        a = FsLock(self.tempDir)         
+        b = FsLock(self.tempDir)
+        a.acquire()
+        try:
+            b.acquire()
+            self.fail('Exception expcted')
+        except IOError, e:
+            self.assertEqual(e.errno, errno.EAGAIN)
+        a.release()
+        b.acquire()
      
     def testSnapshot(self):
         "See issue #1 on github."        
-        psys = PSys(Log(Test.tempDir), dict)
+        psys = PSys(Log(Test.tempDir, VoidLock()), dict)
         psys.exe(Tn1())         # tick = 0
         psys.exe(Tn1())         # 1
         psys.makeSnapshot()
@@ -59,12 +76,12 @@ class Test(unittest.TestCase):
         self.assertEquals(psys.root['tick'], 2)        
         psys.log.close()
         
-        psys = PSys(Log(Test.tempDir), dict)        
+        psys = PSys(Log(Test.tempDir, VoidLock()), dict)
         self.assertEquals(psys.root['tick'], 2)
         
     def testMultipleSnapshots(self):
         "See issue #1 on github."        
-        psys = PSys(Log(Test.tempDir), dict)
+        psys = PSys(Log(Test.tempDir, VoidLock()), dict)
         for _ in range(7):
             psys.exe(Tn1())         # tick = 0
             psys.exe(Tn1())         # 1
@@ -73,31 +90,32 @@ class Test(unittest.TestCase):
         self.assertEquals(psys.root['tick'], 14)        
         psys.log.close()
         
-        psys = PSys(Log(Test.tempDir), dict)        
+        psys = PSys(Log(Test.tempDir, VoidLock()), dict)
         self.assertEquals(psys.root['tick'], 14)
         
         
     def testFilenamePattern(self):
-        namePattern = Log.reSplitFileName        
+        namePattern = Log.reSplitFileName
         self.assertTrue(namePattern.match(NUMERALS[:Log.idNumBase] + ".karma"))
         self.assertFalse(namePattern.match(NUMERALS))
         
     def testGetPieces(self):
-        self.assertEqual(Log("z").getPieces([]), 
+        def newLog(): return Log("z", VoidLock())
+        self.assertEqual(newLog().getPieces([]), 
                          (0, None, []))
-        self.assertEqual(Log("z").getPieces([".log", ".snapshot", "I am Corvax"]), 
+        self.assertEqual(newLog().getPieces([".log", ".snapshot", "I am Corvax"]), 
                          (0, None, []))        
         # If no snapshot then assuming that we starting from transaction #1 and use all logs.
-        self.assertEqual(Log("z").getPieces(["0020.log", "01.log", "12.bordeaux", "2.log", "30.log"]),
+        self.assertEqual(newLog().getPieces(["0020.log", "01.log", "12.bordeaux", "2.log", "30.log"]),
                          (0, None, ["z/01.log", "z/2.log", "z/0020.log", "z/30.log"]))
         # snapshot and no logs        
-        self.assertEqual(Log("z").getPieces(["0020.snapshot"]),
+        self.assertEqual(newLog().getPieces(["0020.snapshot"]),
                          (20L, "z/0020.snapshot", []))
         # multiple snapshots
-        self.assertEqual(Log("z").getPieces(["003.snapshot", "0020.snapshot", "01.log", "0014.snapshot", "2.log", "0021.log", "30.log"]),
+        self.assertEqual(newLog().getPieces(["003.snapshot", "0020.snapshot", "01.log", "0014.snapshot", "2.log", "0021.log", "30.log"]),
                          (20L, "z/0020.snapshot", ["z/0021.log", "z/30.log"]))
         # expected log-snapshot relation
-        self.assertEqual(Log("z").getPieces(["20.snapshot", "19.log", "20.log", "21.log"]),
+        self.assertEqual(newLog().getPieces(["20.snapshot", "19.log", "20.log", "21.log"]),
                          (20L, "z/20.snapshot", ["z/21.log"]))
 
 
