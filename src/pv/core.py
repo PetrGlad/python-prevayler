@@ -80,10 +80,17 @@ class Log(object):
                 try:
                     try:
                         while True:
-                            self.serialId += 1
                             tx = pickle.load(log)
-                            centry = pickle.load(log);
-                            assert self.serialId == centry.serialId                                                        
+                            assert callable(tx)
+                            centry = pickle.load(log)                            
+                            newSerialId = self.serialId + 1
+                            if newSerialId != centry.serialId:
+                                raise Exception("Unexpected transaction id in log."
+                                                + " Log's transaction #" + centry.serialId 
+                                                + ", expected transaction #" + newSerialId 
+                                                + ", log filename " + logFileName)
+                            else:
+                                self.serialId = newSerialId
                             yield tx
                     except EOFError:
                         pass
