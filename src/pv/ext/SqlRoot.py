@@ -45,7 +45,8 @@ class Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(Test, cls).setUpClass()
-        shutil.rmtree(Test.tempDir)        
+        if os.path.isdir(Test.tempDir):
+            shutil.rmtree(Test.tempDir)        
         os.makedirs(Test.tempDir)            
     
     def testSql(self):
