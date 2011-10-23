@@ -21,10 +21,9 @@ class SqlRoot:
 
     def connect(self):
         self.dbconn = sqlite3.connect(
-            ':memory:',
+            u':memory:',
             detect_types=sqlite3.PARSE_DECLTYPES,
-            isolation_level="IMMEDIATE"
-            )
+            isolation_level=u"IMMEDIATE")
 
 
 import unittest, os, shutil
@@ -32,14 +31,14 @@ from pv.core import init
 
 class TestSqlTn1:
     def __call__(self, r):
-        r.dbconn.execute("create table test (name varchar(32));")
+        r.dbconn.execute(u"create table test (name varchar(32));")
               
 class TestSqlTn2:
     def __call__(self, r):
-        r.dbconn.execute("insert into test (name) values ('abc');")
+        r.dbconn.execute(u"insert into test (name) values ('abc');")
 
 class Test(unittest.TestCase):
-    tempDir = './sqlTestData'
+    tempDir = u'./sqlTestData'
 
     # TODO dry unittest code (extract directory preparation)
     @classmethod
@@ -55,7 +54,7 @@ class Test(unittest.TestCase):
         pv.exe(TestSqlTn1())
         pv.exe(TestSqlTn2())
         def fetchall(pvl):
-            return pvl.root.dbconn.execute("select * from test").fetchall()
+            return pvl.root.dbconn.execute(u"select * from test").fetchall()
             
         self.assertEquals(fetchall(pv), [(u'abc',)])
         pv.shutdown()
