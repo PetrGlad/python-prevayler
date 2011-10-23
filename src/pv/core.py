@@ -9,7 +9,7 @@ import threading
 import os.path
 import re
 from pv.util import baseN, NUMERALS
-import fcntl, os # for FsLock
+from FsLock import newLock
 
 class Sentry:
     """Log record boundary that is used to detect partial writes.
@@ -18,26 +18,6 @@ class Sentry:
     def __init__(self, serialId):
         self.serialId = serialId;
         
-
-# TODO Move this class to own file?        
-class FsLock:
-    def __init__(self, dirName):
-        if os.name != 'posix':
-            raise Exception("Locks are not supported on this os, expected 'posix'." + 
-                            " Implement lock support for '" + os.name + "' or configure prevayler without locks.")
-        self.dirName = dirName
-        self.lockFile = None
-        
-    def acquire(self):
-        assert self.lockFile is None
-        lockFile = open(os.path.join(self.dirName, Log.LOCK_FILE), 'a+')
-        fcntl.flock(lockFile, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        self.lockFile = lockFile
-        
-    def release(self):
-        self.lockFile.close()
-        self.lockFile = None
-
 
 class Log(object):
     """
@@ -192,4 +172,4 @@ class PSys(object):
 
 
 def init(dataDir, rootCtor):
-    return PSys(Log(dataDir, FsLock(dataDir)), rootCtor)
+    return PSys(Log(dataDir, newLock(dataDir, Log.LOCK_FILE)), rootCtor)

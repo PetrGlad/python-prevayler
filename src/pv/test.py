@@ -4,8 +4,9 @@ Tests.
 @author Petr Gladkikh
 '''
 import unittest
-import glob, os, errno
-from pv.core import PSys, Log, FsLock
+import glob, os
+from pv.core import PSys, Log
+from FsLock import VoidLock
 from util import NUMERALS
 
 import warnings
@@ -38,14 +39,9 @@ def clearState(dirName):
         os.remove(fn)
 
 
-class VoidLock:
-    def acquire(self): pass
-    def release(self): pass
-    
-
 class Test(unittest.TestCase):
     
-    tempDir = "../../testData"
+    tempDir = "./testData"
     
     @classmethod
     def setUpClass(cls):
@@ -56,18 +52,6 @@ class Test(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         clearState(Test.tempDir)
-        
-    def testFsLock(self):
-        a = FsLock(self.tempDir)         
-        b = FsLock(self.tempDir)
-        a.acquire()
-        try:
-            b.acquire()
-            self.fail('Exception expected')
-        except IOError, e:
-            self.assertEqual(e.errno, errno.EAGAIN)
-        a.release()
-        b.acquire()
      
     def testSnapshot(self):
         "See issue #1 on github."        
