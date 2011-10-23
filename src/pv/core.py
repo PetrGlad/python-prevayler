@@ -39,17 +39,16 @@ class Log(object):
         self.mutex = mutex
         mutex.acquire()
         
-    def formatFileName(self, serialId, suffix):
-        # File name is padded for easier sorting
-        return baseN(serialId, self.idNumBase).rjust(10, '0') + u'.' + suffix
+    def formatFileName(self, serialId, suffix):        
+        return os.path.join(self.dataDir,
+                            # File name is padded for easier sorting
+                            baseN(serialId, self.idNumBase).rjust(10, '0') + u'.' + suffix)
     
     def makeLogFileName(self, serialId):
-        return os.path.join(self.dataDir,
-                            self.formatFileName(serialId, self.LOG_SUFFIX))
+        return self.formatFileName(serialId, self.LOG_SUFFIX)
     
     def makeSnapshotName(self, serialId):
-        return os.path.join(self.dataDir,
-                            self.formatFileName(serialId, self.SNAPSHOT_SUFFIX))
+        return self.formatFileName(serialId, self.SNAPSHOT_SUFFIX)
 
     def logRotate(self, serialId):
         self.closeLog()
