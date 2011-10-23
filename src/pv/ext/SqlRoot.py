@@ -59,5 +59,10 @@ class Test(unittest.TestCase):
         self.assertEquals(fetchall(pv), [(u'abc',)])
         pv.shutdown()
         
-        pv2 = init('./sqlTestData', SqlRoot)
+        pv2 = init(Test.tempDir, SqlRoot)
         self.assertEquals(fetchall(pv2), [(u'abc',)])
+        pv2.makeSnapshot()
+        pv2.shutdown()
+        
+        pv3 = init(Test.tempDir, SqlRoot)
+        self.assertEquals(fetchall(pv3), [(u'abc',)])
