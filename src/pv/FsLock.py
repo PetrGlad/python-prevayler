@@ -34,6 +34,7 @@ class VoidLock:
 def newLock(dataDir, lockFile):
     if os.name != 'posix':
         # TODO Use logger for warnings?
+        # TODO Implement Windows locks, see http://code.activestate.com/recipes/65203-portalocker-cross-platform-posixnt-api-for-flock-s/
         print (u"Locks are not supported on this os, expected 'posix'." 
                + " Implement lock support for '" + os.name + "' or configure prevayler without locks.")
         return VoidLock()
