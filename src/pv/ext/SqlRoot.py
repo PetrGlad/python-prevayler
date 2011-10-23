@@ -22,6 +22,42 @@ class SqlRoot:
     def connect(self):
         self.dbconn = sqlite3.connect(
             ':memory:',
-            detect_types = sqlite3.PARSE_DECLTYPES,
-            isolation_level = "IMMEDIATE"
+            detect_types=sqlite3.PARSE_DECLTYPES,
+            isolation_level="IMMEDIATE"
             )
+
+
+import unittest, os, shutil
+from pv.core import init
+
+class TestSqlTn1:
+    def __call__(self, r):
+        r.dbconn.execute("create table test (name varchar(32));")
+              
+class TestSqlTn2:
+    def __call__(self, r):
+        r.dbconn.execute("insert into test (name) values ('abc');")
+
+class Test(unittest.TestCase):
+    tempDir = './sqlTestData'
+
+    # TODO dry unittest code (extract directory preparation)
+    @classmethod
+    def setUpClass(cls):
+        super(Test, cls).setUpClass()
+        shutil.rmtree(Test.tempDir)        
+        os.makedirs(Test.tempDir)            
+    
+    def testSql(self):
+        # NOte: to mix with other data you may use other constructor e.g. lamba : {'sql' : SqlRoot()}        
+        pv = init(self.tempDir, SqlRoot)         
+        pv.exe(TestSqlTn1())
+        pv.exe(TestSqlTn2())
+        def fetchall(pvl):
+            return pvl.root.dbconn.execute("select * from test").fetchall()
+            
+        self.assertEquals(fetchall(pv), [(u'abc',)])
+        pv.shutdown()
+        
+        pv2 = init('./sqlTestData', SqlRoot)
+        self.assertEquals(fetchall(pv2), [(u'abc',)])

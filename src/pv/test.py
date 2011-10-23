@@ -79,8 +79,7 @@ class Test(unittest.TestCase):
         
         psys = PSys(Log(Test.tempDir, VoidLock()), dict)
         self.assertEquals(psys.root['tick'], 14)
-        
-        
+
     def testFilenamePattern(self):
         namePattern = Log.reSplitFileName
         self.assertTrue(namePattern.match(NUMERALS[:Log.idNumBase] + ".karma"))
