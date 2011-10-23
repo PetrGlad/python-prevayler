@@ -4,9 +4,12 @@ Tests.
 @author Petr Gladkikh
 '''
 import unittest
-import glob, os, fcntl, errno
+import glob, os, errno
 from pv.core import PSys, Log, FsLock
 from util import NUMERALS
+
+import warnings
+warnings.simplefilter('default') # re-enable DeprecationWarning in python 2.7
 
 class Tn1:
     def __call__(self, root):
@@ -60,7 +63,7 @@ class Test(unittest.TestCase):
         a.acquire()
         try:
             b.acquire()
-            self.fail('Exception expcted')
+            self.fail('Exception expected')
         except IOError, e:
             self.assertEqual(e.errno, errno.EAGAIN)
         a.release()
