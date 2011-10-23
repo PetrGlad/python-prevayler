@@ -7,7 +7,7 @@ import pv.core
 from pv.test import Tn1, Tn2
 import os 
 
-dataDir = "./data"
+dataDir = u"./data"
 
 if __name__ == "__main__":
     print "----hi----"

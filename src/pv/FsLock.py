@@ -34,8 +34,8 @@ class VoidLock:
 def newLock(dataDir, lockFile):
     if os.name != 'posix':
         # TODO Use logger for warnings?
-        print ("Locks are not supported on this os, expected 'posix'." + 
-                        " Implement lock support for '" + os.name + "' or configure prevayler without locks.")
+        print (u"Locks are not supported on this os, expected 'posix'." 
+               + " Implement lock support for '" + os.name + "' or configure prevayler without locks.")
         return VoidLock()
     else:
         return FsLock(dataDir, lockFile)
@@ -43,8 +43,8 @@ def newLock(dataDir, lockFile):
     
 import unittest, errno
 class Test(unittest.TestCase):
-    tempDir = "./testData"
-    lockName = "xyzzy"
+    tempDir = u"./testData"
+    lockName = u"xyzzy"
     
     @classmethod
     def setUpClass(cls):
@@ -58,7 +58,7 @@ class Test(unittest.TestCase):
         a.acquire()
         try:
             b.acquire()
-            self.fail('Exception expected')
+            self.fail(u'Exception expected')
         except IOError, e:
             self.assertEqual(e.errno, errno.EAGAIN)
         a.release()

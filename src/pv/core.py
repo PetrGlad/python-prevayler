@@ -8,8 +8,8 @@ import cPickle as pickle
 import threading
 import os.path
 import re
-from pv.util import baseN, NUMERALS
-from FsLock import newLock
+from .util import baseN, NUMERALS
+from .FsLock import newLock
 
 class Sentry:
     """Log record boundary that is used to detect partial writes.
@@ -24,13 +24,13 @@ class Log(object):
     Support for snapshots and log segmentation.
     """
     
-    LOG_SUFFIX = "log"
-    SNAPSHOT_SUFFIX = "snapshot"    
+    LOG_SUFFIX = u"log"
+    SNAPSHOT_SUFFIX = u"snapshot"    
     PICKLE_PROTOCOL = 0    # ASCII
-    LOCK_FILE = ".log_lock"
+    LOCK_FILE = u".log_lock"
     
     idNumBase = 10
-    reSplitFileName = re.compile('([' + NUMERALS[:idNumBase] + ']+)\.(\w+)')
+    reSplitFileName = re.compile(u'([' + NUMERALS[:idNumBase] + u']+)\.(\w+)')
     
     def __init__(self, dataDir, mutex):
         self.serialId = 0
@@ -41,7 +41,7 @@ class Log(object):
         
     def formatFileName(self, serialId, suffix):
         # File name is padded for easier sorting
-        return baseN(serialId, self.idNumBase).rjust(10, '0') + '.' + suffix
+        return baseN(serialId, self.idNumBase).rjust(10, '0') + u'.' + suffix
     
     def makeLogFileName(self, serialId):
         return os.path.join(self.dataDir,
@@ -89,7 +89,7 @@ class Log(object):
                             centry = pickle.load(log)                            
                             newSerialId = self.serialId + 1
                             if newSerialId != centry.serialId:
-                                raise Exception("Unexpected transaction id in log."
+                                raise Exception(u"Unexpected transaction id in log."
                                                 + " Log's transaction #" + centry.serialId 
                                                 + ", expected transaction #" + newSerialId 
                                                 + ", log filename " + logFileName)
