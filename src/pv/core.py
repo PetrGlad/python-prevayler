@@ -169,6 +169,9 @@ class PSys(object):
             self.tnCount += 1
         finally:
             self.lock.release()
+            
+    def shutdown(self):
+        self.log.close()
 
 
 def init(dataDir, rootCtor):

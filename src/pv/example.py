@@ -7,14 +7,14 @@ import pv.core
 from pv.test import Tn1, Tn2
 import os 
 
-dataDir = "../../data"
+dataDir = "./data"
 
 if __name__ == "__main__":
     print "----hi----"
     if not os.path.isdir(dataDir):
         os.makedirs(dataDir)
     import time
-    t1 = time.time()    
+    t1 = time.time()
     
     psys = pv.core.init(dataDir, dict)
     print "Load time" , time.time() - t1
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print "Transactions time" , time.time() - t1
     print 'Transactions count', psys.tnCount
     psys.makeSnapshot()
-    psys.log.close()
+    psys.shutdown()
     print "-----final state----"
     print '\n'.join([`key` + '->' + `v` for key, v in psys.root.iteritems()])    
     print "----bye----\n"
