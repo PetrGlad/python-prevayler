@@ -1,3 +1,24 @@
 This is implementation of "object prevalence system" AKA Prevayler in Python.
 
 See this site for ideas description http://prevayler.org/
+
+SOURCE
+
+'pv' is root package
+'pv.ext' is package that contains some utilities that extend prevayler's functionality.
+src/pv/example.py is usage example.
+
+TESTING
+
+There are Python unit tests in source tree. Since the project is tiny, unittests
+are usually in same file as main code.
+You may use python-nose to run all unit tests. See it's homepage
+http://readthedocs.org/docs/nose/en/latest/
+Ubuntu has package for it python-nose:
+    sudo apt-get install python-nose
+To run tests cd to project's root and
+	nosetests --all-modules
+Eclipse's PyDev also can run all tests in project: select project in project explorer
+and from context menu choose "Run As / Python unit-test".
+    
+
